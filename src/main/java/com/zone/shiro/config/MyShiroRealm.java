@@ -6,9 +6,9 @@ import java.util.stream.Collectors;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.DisabledAccountException;
+import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
-import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
@@ -50,12 +50,15 @@ public class MyShiroRealm extends AuthorizingRealm {
 		// 获取用户信息
 		String name = authenticationToken.getPrincipal().toString();
 		Object credentials = authenticationToken.getCredentials();
-		String str = new String((char[]) credentials);
+		String password = new String((char[]) credentials);
 		User user = shiroService.getUserByName(name);
 		if (user == null) {
 			// 这里返回后会报出对应异常
-			throw new DisabledAccountException();
+			throw new UnknownAccountException();
 		} else {
+			if (!user.getPassword().equals(password)) {
+				throw new IncorrectCredentialsException();
+			}
 			// 这里验证authenticationToken和simpleAuthenticationInfo的信息
 			SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(name, user.getPassword().toString(), getName());
 			return simpleAuthenticationInfo;
